@@ -54,7 +54,7 @@ class player:
       self.rx = numpy.array([[1, 0, 0],
                           [0, math.cos(math.radians(self.viewdirx)),-math.sin(math.radians(self.viewdirx))],
                           [0, math.sin(math.radians(self.viewdirx)), math.cos(math.radians(self.viewdirx))]])
-       
+
       self.ry = numpy.array([[math.cos(math.radians(self.viewdiry)), 0, math.sin(math.radians(self.viewdiry))],
                           [0, 1, 0],
                           [-math.sin(math.radians(self.viewdiry)), 0, math.cos(math.radians(self.viewdiry))]])
@@ -72,14 +72,14 @@ p = player()
 
 
 #loads the textuyre
-texture = pygame.image.load("texture.png").convert()
-texw, texh = texture.get_size()
+# texture = pygame.image.load("textures/texture.png").convert()
+# texw, texh = texture.get_size()
 
-size = max(texw, texh)
-texture = pygame.transform.scale(texture, (size, size))
+# size = max(texw, texh)
+# texture = pygame.transform.scale(texture, (size, size))
 
-texw, texh = texture.get_size()
-texarray = pygame.surfarray.pixels3d(texture)
+# texw, texh = texture.get_size()
+# texarray = pygame.surfarray.pixels3d(texture)
 def barycentric(px, py, a, b, c):
     den = (b[1]-c[1])*(a[0]-c[0]) + (c[0]-b[0])*(a[1]-c[1])
     if den == 0:
@@ -102,7 +102,7 @@ def draw_texture(screenarray, texarray, pts, uvs):
 
     height, width, _ = screenarray.shape
     texh, texw, _ = texarray.shape
-    
+
     #only checking for bounding in the specified area
     minx = max(int(min(x0, x1, x2)), 0)
     maxx = min(int(max(x0, x1, x2)), width - 1)
@@ -149,13 +149,32 @@ class polygon:
     self.maxy = numpy.array((0,0,0,1))
     self.maxz = numpy.array((0,0,0,1))
     self.randomass = numpy.array((0,0,0,1))
+    #open texture
+    self.texture = pygame.image.load("textures/error.png").convert()
+    self.texw, self.texh = self.texture.get_size()
+  
+    size = max(self.texw, self.texh)
+    #scale it for cube
+    self.texture = pygame.transform.scale(self.texture, (size, size))
+  
+    self.texarray = pygame.surfarray.pixels3d(self.texture)
+  
+  def set_tex(self,texloc):
+    self.texture = pygame.image.load(texloc).convert()
+    self.texw, self.texh = self.texture.get_size()
+
+    size = max(self.texw, self.texh)
+    #scale it for cube
+    self.texture = pygame.transform.scale(self.texture, (size, size))
+
+    self.texarray = pygame.surfarray.pixels3d(self.texture)
   def rotate(self, rotx, roty,rotz):
     for i in range(0,len(self.verticies)):
         self.rx = numpy.array([[1, 0, 0, 0],
                           [0, math.cos(math.radians(rotx)), math.sin(math.radians(rotx)), 0],
                           [0, -math.sin(math.radians(rotx)), math.cos(math.radians(rotx)), 0],
                           [0, 0, 0, 1]])
-       
+
         self.ry = numpy.array([[math.cos(math.radians(roty)), 0, math.sin(math.radians(roty)), 0],
                           [0, 1, 0, 0],
                           [-math.sin(math.radians(roty)), 0, math.cos(math.radians(roty)), 0],
@@ -208,15 +227,15 @@ class polygon:
   def render_actual(self):
     self.pointstorender = []
     for i in range(0,len(self.verticies)):
-     
+
         #ttranslate the vertex position based on the player pos
         newpos = self.verticies[i].processedpos- p.pos
-       
+
         negatez = numpy.array([[1,0,0,0],
                               [0,1,0,0],
                               [0,0,-1,0],
                               [0,0,0,1],])
-                             
+
         newpos= numpy.array((newpos[0],newpos[1],newpos[2], 1))
         newpos = newpos.dot(negatez)
         #create rotation matrices
@@ -224,15 +243,15 @@ class polygon:
                           [0, math.cos(math.radians(p.viewdirx)), math.sin(math.radians(p.viewdirx)), 0],
                           [0, -math.sin(math.radians(p.viewdirx)), math.cos(math.radians(p.viewdirx)), 0],
                           [0, 0, 0, 1]])
-       
+
         ry = numpy.array([[math.cos(math.radians(p.viewdiry)), 0, math.sin(math.radians(p.viewdiry)), 0],
                           [0, 1, 0, 0],
                           [-math.sin(math.radians(p.viewdiry)), 0, math.cos(math.radians(p.viewdiry)), 0],
                           [0, 0, 0, 1]])
-       
+
         #combine the rot matrix
         r = numpy.dot(ry, rx)
-       
+
         #apply rot
         newpos = newpos.dot(r)
         #project
@@ -269,7 +288,7 @@ class polygon:
                 self.verticies[i+2].uv
             ]
 
-            draw_texture(screenarray, texarray, pts, uvs)
+            draw_texture(screenarray, self.texarray, pts, uvs)
 class model:
   def __init__(self):
     self.polygons = []
@@ -280,20 +299,22 @@ class model:
   def render(self):
     for i in self.polygons:
       i.render_poly()
- 
+  def set_tex(self,texloc):
+    for i in self.polygons:
+      i.set_tex(texloc)
 
 is_running = True
 
 # MAKE SURE ITS COUNTER CLOCKWISE
 # OR EVERYTHING BRAEKSKSK
 mpole = polygon()
-mpole.verticies.append(vertex(numpy.array((0,0,0,1)), (0,0)))
-mpole.verticies.append(vertex(numpy.array((2,9,0,1)), (1,1)))
-mpole.verticies.append(vertex(numpy.array((2,0,0,1)), (1,0)))
+mpole.verticies.append(vertex(numpy.array((-2,0,0,1)), (0,0)))
+mpole.verticies.append(vertex(numpy.array((0,9,0,1)), (1,1)))
+mpole.verticies.append(vertex(numpy.array((0,0,0,1)), (1,0)))
 
-mpole.verticies.append(vertex(numpy.array((0,0,0,1)), (0,0)))
-mpole.verticies.append(vertex(numpy.array((2,9,0,1)), (1,1)))
-mpole.verticies.append(vertex(numpy.array((0,9,0,1)), (0,1)))
+mpole.verticies.append(vertex(numpy.array((-2,0,0,1)), (0,0)))
+mpole.verticies.append(vertex(numpy.array((-2,9,0,1)), (0,1)))
+mpole.verticies.append(vertex(numpy.array((0,9,0,1)), (1,1)))
 
 mpole2 = polygon()
 mpole2.verticies.append(vertex(numpy.array((-13,0,0,1)), (0,0)))
@@ -304,11 +325,84 @@ mpole2.verticies.append(vertex(numpy.array((-13,0,0,1)), (0,0)))
 mpole2.verticies.append(vertex(numpy.array((-11,9,0,1)), (1,1)))
 mpole2.verticies.append(vertex(numpy.array((-13,9,0,1)), (0,1)))
 
+mcon = polygon()
+mcon.verticies.append(vertex(numpy.array((-11,9,0,1)), (0,1)))
+mcon.verticies.append(vertex(numpy.array((-6.5,6.5,0,1)), (1,1)))
+mcon.verticies.append(vertex(numpy.array((-6.5,4.5,0,1)), (1,0)))
+
+mcon.verticies.append(vertex(numpy.array((-11,9,0,1)), (0,0)))
+mcon.verticies.append(vertex(numpy.array((-6.5,4.5,0,1)), (1,1)))
+mcon.verticies.append(vertex(numpy.array((-11,7,0,1)), (0,1)))
+
+mcon2 = polygon()
+mcon2.verticies.append(vertex(numpy.array((-6.5,4.5,0,1)), (0,1)))
+mcon2.verticies.append(vertex(numpy.array((-6.5,6.5,0,1)), (1,1)))
+mcon2.verticies.append(vertex(numpy.array((-2,9,0,1)), (1,0)))
+
+mcon2.verticies.append(vertex(numpy.array((-2,9,0,1)), (0,0)))
+mcon2.verticies.append(vertex(numpy.array((-2,7,0,1)), (1,1)))
+mcon2.verticies.append(vertex(numpy.array((-6.5,4.5,0,1)), (0,1)))
+
 
 m = model()
 m.polygons.append(mpole)
+m.polygons.append(mcon)
+m.polygons.append(mcon2)
 m.polygons.append(mpole2)
 m.set_pos(numpy.array((-5,0,5,1)))
+m.set_tex("textures/texture3.png")
+
+#i
+
+ipole = polygon()
+ipole.verticies.append(vertex(numpy.array((-2,0,0,1)), (0,0)))
+ipole.verticies.append(vertex(numpy.array((0,5,0,1)), (1,1)))
+ipole.verticies.append(vertex(numpy.array((0,0,0,1)), (1,0)))
+ipole.verticies.append(vertex(numpy.array((-2,0,0,1)), (0,0)))
+ipole.verticies.append(vertex(numpy.array((-2,5,0,1)), (0,1)))
+ipole.verticies.append(vertex(numpy.array((0,5,0,1)), (1,1)))
+
+isq = polygon()
+isq.verticies.append(vertex(numpy.array((-2,7,0,1)), (0,0)))
+isq.verticies.append(vertex(numpy.array((0,9,0,1)), (1,1)))
+isq.verticies.append(vertex(numpy.array((0,7,0,1)), (1,0)))
+
+isq.verticies.append(vertex(numpy.array((-2,7,0,1)), (0,0)))
+isq.verticies.append(vertex(numpy.array((0,9,0,1)), (1,1)))
+isq.verticies.append(vertex(numpy.array((-2,9,0,1)), (0,1)))
+
+iletter = model()
+iletter.polygons.append(ipole)
+iletter.polygons.append(isq)
+iletter.set_pos(numpy.array((0,0,5,1)))
+iletter.set_tex("textures/cobble.png")
+isq.set_tex("textures/carmarck.png")
+
+#t
+
+tpole = polygon()
+tpole.verticies.append(vertex(numpy.array((-2,0,0,1)), (0,0)))
+tpole.verticies.append(vertex(numpy.array((0,5,0,1)), (1,1)))
+tpole.verticies.append(vertex(numpy.array((0,0,0,1)), (1,0)))
+tpole.verticies.append(vertex(numpy.array((-2,0,0,1)), (0,0)))
+tpole.verticies.append(vertex(numpy.array((-2,5,0,1)), (0,1)))
+tpole.verticies.append(vertex(numpy.array((0,5,0,1)), (1,1)))
+
+tsq = polygon()
+tsq.verticies.append(vertex(numpy.array((-2,7,0,1)), (0,0)))
+tsq.verticies.append(vertex(numpy.array((4,9,0,1)), (1,1)))
+tsq.verticies.append(vertex(numpy.array((4,7,0,1)), (1,0)))
+
+tsq.verticies.append(vertex(numpy.array((-2,7,0,1)), (0,0)))
+tsq.verticies.append(vertex(numpy.array((4,9,0,1)), (1,1)))
+tsq.verticies.append(vertex(numpy.array((-2,9,0,1)), (0,1)))
+
+tletter = model()
+tletter.polygons.append(tpole)
+tletter.polygons.append(tsq)
+tletter.set_pos(numpy.array((4,0,5,1)))
+tpole.set_tex("textures/shinji.png")
+tsq.set_tex("textures/graz.png")
 
 
 frontfc= polygon()
@@ -378,6 +472,7 @@ triangle.polygons.append(backfc)
 triangle.polygons.append(botfc)
 triangle.polygons.append(topfc)
 triangle.set_pos(numpy.array((5,0,5,1)))
+triangle.set_tex("textures/texture.png")
 
 flagw = False
 flaga = False
@@ -415,17 +510,17 @@ def move():
     newz = p.pos[2] + (playerSin)
     newx = p.pos[0] + (playerCos)
     p.pos = numpy.array((newx,p.pos[1],newz,1))
-   
+
   if (rotleft):
     p.viewdiry+=1
   elif (rotright):
     p.viewdiry-=1
-   
+
   if (rotdown):
-    p.viewdirx+=1
+    p.viewdirx+=0.5
   elif (rotup):
-    p.viewdirx-=1
-   
+    p.viewdirx-=0.5
+
   if (flydown):
     p.pos = numpy.array((p.pos[0],p.pos[1]-0.1,p.pos[2],1))
   elif (flyup):
@@ -480,7 +575,7 @@ while is_running:
         flyup=False
       if event.key == pygame.K_q:
         flydown=False
-   
+
 
 
   window_surface.blit(background, (0, 0))
@@ -491,7 +586,9 @@ while is_running:
   #starmodel.render()
   m.render()
   triangle.render()
+  iletter.render()
+  tletter.render()
   #planetest.render()
   p.update_planes()
-  time.sleep(0.01)
+  time.sleep(0.001)
   pygame.display.update()

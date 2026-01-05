@@ -1,5 +1,6 @@
 # Maker Portfolio
 
+This is a github repository that contains the codebase for all of the projects featured in my portfolio. 
 
 ## Machine Learning
 
